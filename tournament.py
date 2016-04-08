@@ -5,6 +5,10 @@
 
 import psycopg2
 
+POINTS_FOR_WIN = 1
+POINTS_FOR_DRAW = 0
+POINTS_FOR_BYE = 1
+
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -28,6 +32,7 @@ def deletePlayers():
     c = conn.cursor()
 
     c.execute("DELETE FROM players;")
+    c.execute("DELETE FROM tournament_members;")
 
     conn.commit()
     conn.close()
@@ -60,12 +65,39 @@ def registerPlayer(name):
     c = conn.cursor()
 
     c.execute("INSERT INTO players (name) VALUES (%s)", (name,))
+    c.execute('''SELECT max(pid)
+                FROM players
+                WHERE name = (%s)
+        ''', (name,))
+    pid = c.fetchone()[0]
+
+    registerPlayerForTournament(pid)  # player always registers to Default
+                                      # tournament with TID=0. Need to be
+                                      # compatible with default tests
 
     conn.commit()
     conn.close()
 
 
-def playerStandings():
+def registerPlayerForTournament(pid, tid=0):
+    """Adds a player to the tournament database.
+
+    The database assigns a unique serial id number for the player.  (This
+    should be handled by your SQL database schema, not in your Python code.)
+
+    Args:
+      name: the player's full name (need not be unique).
+    """
+    conn = connect()
+    c = conn.cursor()
+
+    c.execute("INSERT INTO tournament_members (tid, pid) VALUES (%s , %s)", (tid, pid, ))
+
+    conn.commit()
+    conn.close()
+
+
+def playerStandings(tid=0):
     """Returns a list of the players and their win records, sorted by wins.
 
     The first entry in the list should be the player in first place, or a player
@@ -78,9 +110,21 @@ def playerStandings():
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
+    conn = connect()
+    c = conn.cursor()
+
+    c.execute('''SELECT player1, player2, result
+                FROM matches, tournament_members
+                WHERE matches.tournament = tournament_members.tid
+                AND tournament_members.tid = (%s)''', (tid,))
+    result_list = c.fetchall()
+    print result_list
+
+    conn.commit()
+    conn.close()
 
 
-def reportMatch(winner, loser):
+def reportMatch(winner, loser, tid=0):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -89,7 +133,7 @@ def reportMatch(winner, loser):
     """
 
 
-def swissPairings():
+def swissPairings(tid=0):
     """Returns a list of pairs of players for the next round of a match.
 
     Assuming that there are an even number of players registered, each player

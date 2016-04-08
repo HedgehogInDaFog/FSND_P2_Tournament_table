@@ -16,14 +16,15 @@ CREATE TABLE players (
 );
 
 CREATE TABLE matches (
-	gid			serial PRIMARY KEY,
-	tournament	integer,
+	mid			serial PRIMARY KEY,
 	player1		integer,
 	player2		integer,
-	result		varchar(5)
+	result		varchar(1), -- "W", "D" or "L" for win, draw and lose of first player
+	tournament	integer
 );
 
 CREATE TABLE tournament_members (
 	tid		integer,
-	pid		integer
+	pid		integer,
+	number_of_byes	integer DEFAULT 0
 );
