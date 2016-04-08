@@ -8,17 +8,18 @@
 
 CREATE DATABASE tournament;
 
+DROP TABLE IF EXISTS players, matches, tournament_members;
+
 CREATE TABLE players (
-	pid		integer PRIMARY KEY nextval('serial'),
+	pid		serial PRIMARY KEY,
 	name	text
 );
 
-CREATE TABLE results (
-	gid			integer PRIMARY KEY nextval('serial'),
+CREATE TABLE matches (
+	gid			serial PRIMARY KEY,
 	tournament	integer,
 	player1		integer,
 	player2		integer,
-	round		integer,
 	result		varchar(5)
 );
 
