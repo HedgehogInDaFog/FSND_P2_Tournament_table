@@ -22,8 +22,8 @@ CREATE TABLE Matches (
 	mid			serial PRIMARY KEY,
 	player1		integer,
 	player2		integer,
-	player1_win	integer,
-	draw 		integer
+	p1points	integer,
+	p2points	integer,
 	tournament	integer
 );
 

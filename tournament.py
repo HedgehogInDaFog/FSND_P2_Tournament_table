@@ -110,6 +110,15 @@ def playerStandings(tid=0):
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
+    deletePlayers()
+    deleteMatches()
+
+    registerPlayer("Num One")
+    registerPlayer("Num Two")
+
+    reportMatch(1, 2)
+    reportMatch(3, 1)
+    reportMatch(1, 2, True)
 
     conn = connect()
     c = conn.cursor()
@@ -122,7 +131,7 @@ def playerStandings(tid=0):
     print member_list
     print
 
-    c.execute('''SELECT player1, player2, player1_win, draw
+    c.execute('''SELECT player1, player2, p1points, p2points
                 FROM Matches
                 WHERE Matches.tournament = (%s)''', (tid,))
     result_list = c.fetchall()
@@ -146,13 +155,13 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
     c = conn.cursor()
 
     if isDraw:
-        draw = 1
-        player1_win = 0
+        p1points = POINTS_FOR_DRAW
+        p2points = POINTS_FOR_DRAW
     else:
-        draw = 0
-        player1_win = 1
+        p1points = POINTS_FOR_WIN
+        p1points = 0
     c.execute('''INSERT INTO Matches (player1, player2, player1_win, draw, tournament)
-                VALUES ((%s), (%s), (%s), (%s))''', (winner, loser, player1_win, draw, tid,))
+                VALUES ((%s), (%s), (%s), (%s), (%s))''', (winner, loser, p1points, p2points, tid,))
 
     conn.commit()
     conn.close()
