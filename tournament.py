@@ -72,7 +72,7 @@ def registerPlayer(name):
     pid = c.fetchone()[0]
 
     registerPlayerForTournament(pid)  # player always registers to Default
-                                      # tournament with TID=0. Need to be
+                                      # tournament with TID=0 to be
                                       # compatible with default tests
 
     conn.commit()
@@ -111,22 +111,10 @@ def playerStandings(tid=0):
         matches: the number of matches the player has played
     """
 
-    deletePlayers()
-    deleteMatches()
-
-    registerPlayer("Num One")
-    registerPlayer("Num Two")
-    #registerPlayer("Num Three")
-    #registerPlayer("Num Four")
-
-    reportMatch(1, 2)
-    reportMatch(3, 1)
-    #reportMatch(2, 1)
-    #reportMatch(1, 2, True)
     conn = connect()
     c = conn.cursor()
 
-    c.execute('''SELECT pid, numberOfByes
+    c.execute('''SELECT pid
                 FROM TournamentMembers
                 WHERE tid = (%s)''', (tid,))
     member_list = c.fetchall()
@@ -134,10 +122,9 @@ def playerStandings(tid=0):
     print member_list
     print
 
-    c.execute('''SELECT player1, player2, result
-                FROM Matches, TournamentMembers
-                WHERE Matches.tournament = TournamentMembers.tid
-                AND TournamentMembers.tid = (%s)''', (tid,))
+    c.execute('''SELECT player1, player2, player1_win, draw
+                FROM Matches
+                WHERE Matches.tournament = (%s)''', (tid,))
     result_list = c.fetchall()
     print "result_list: "
     print result_list
@@ -159,11 +146,13 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
     c = conn.cursor()
 
     if isDraw:
-        result = "D"
+        draw = 1
+        player1_win = 0
     else:
-        result = "W"
-    c.execute('''INSERT INTO Matches (player1, player2, result, tournament)
-                VALUES ((%s), (%s), (%s), (%s))''', (winner, loser, result, tid,))
+        draw = 0
+        player1_win = 1
+    c.execute('''INSERT INTO Matches (player1, player2, player1_win, draw, tournament)
+                VALUES ((%s), (%s), (%s), (%s))''', (winner, loser, player1_win, draw, tid,))
 
     conn.commit()
     conn.close()
@@ -183,3 +172,18 @@ def swissPairings(tid=0):
         id2: the second player's unique id
         name2: the second player's name
     """
+
+'''
+deletePlayers()
+deleteMatches()
+
+registerPlayer("Num One")
+registerPlayer("Num Two")
+#registerPlayer("Num Three")
+#registerPlayer("Num Four")
+
+reportMatch(1, 2)
+reportMatch(3, 1)
+#reportMatch(2, 1)
+#reportMatch(1, 2, True)
+'''

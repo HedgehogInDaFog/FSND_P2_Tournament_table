@@ -22,12 +22,12 @@ CREATE TABLE Matches (
 	mid			serial PRIMARY KEY,
 	player1		integer,
 	player2		integer,
-	result		varchar(1), -- "W", "D" or "L" for win, draw and lose of first player
+	player1_win	integer,
+	draw 		integer
 	tournament	integer
 );
 
 CREATE TABLE TournamentMembers (
 	tid				integer,
-	pid				integer,
-	numberOfByes	integer DEFAULT 0
+	pid				integer
 );
