@@ -6,16 +6,19 @@
 -- You can write comments in this file by starting them with two dashes, like
 -- these lines here.
 
+DROP DATABASE tournament;
 CREATE DATABASE tournament;
+\c tournament;
+DROP TABLE IF EXISTS Players;
+DROP TABLE IF EXISTS Matches;
+DROP TABLE IF EXISTS TournamentMembers;
 
-DROP TABLE IF EXISTS players, matches, tournament_members;
-
-CREATE TABLE players (
+CREATE TABLE Players (
 	pid		serial PRIMARY KEY,
 	name	text
 );
 
-CREATE TABLE matches (
+CREATE TABLE Matches (
 	mid			serial PRIMARY KEY,
 	player1		integer,
 	player2		integer,
@@ -23,8 +26,8 @@ CREATE TABLE matches (
 	tournament	integer
 );
 
-CREATE TABLE tournament_members (
-	tid		integer,
-	pid		integer,
-	number_of_byes	integer DEFAULT 0
+CREATE TABLE TournamentMembers (
+	tid				integer,
+	pid				integer,
+	numberOfByes	integer DEFAULT 0
 );

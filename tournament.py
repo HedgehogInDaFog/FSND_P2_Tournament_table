@@ -20,7 +20,7 @@ def deleteMatches():
     conn = connect()
     c = conn.cursor()
 
-    c.execute("DELETE FROM matches;")
+    c.execute("DELETE FROM Matches;")
 
     conn.commit()
     conn.close()
@@ -31,8 +31,8 @@ def deletePlayers():
     conn = connect()
     c = conn.cursor()
 
-    c.execute("DELETE FROM players;")
-    c.execute("DELETE FROM tournament_members;")
+    c.execute("DELETE FROM Players;")
+    c.execute("DELETE FROM TournamentMembers;")
 
     conn.commit()
     conn.close()
@@ -43,7 +43,7 @@ def countPlayers():
     conn = connect()
     c = conn.cursor()
 
-    c.execute("SELECT COUNT(pid) FROM players;")
+    c.execute("SELECT COUNT(pid) FROM Players;")
     count = c.fetchone()[0]
 
     conn.commit()
@@ -64,9 +64,9 @@ def registerPlayer(name):
     conn = connect()
     c = conn.cursor()
 
-    c.execute("INSERT INTO players (name) VALUES (%s)", (name,))
+    c.execute("INSERT INTO Players (name) VALUES (%s)", (name,))
     c.execute('''SELECT max(pid)
-                FROM players
+                FROM Players
                 WHERE name = (%s)
         ''', (name,))
     pid = c.fetchone()[0]
@@ -91,7 +91,7 @@ def registerPlayerForTournament(pid, tid=0):
     conn = connect()
     c = conn.cursor()
 
-    c.execute("INSERT INTO tournament_members (tid, pid) VALUES (%s , %s)", (tid, pid, ))
+    c.execute("INSERT INTO TournamentMembers (tid, pid) VALUES (%s , %s)", (tid, pid, ))
 
     conn.commit()
     conn.close()
@@ -110,21 +110,44 @@ def playerStandings(tid=0):
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
+
+    deletePlayers()
+    deleteMatches()
+
+    registerPlayer("Num One")
+    registerPlayer("Num Two")
+    #registerPlayer("Num Three")
+    #registerPlayer("Num Four")
+
+    reportMatch(1, 2)
+    reportMatch(3, 1)
+    #reportMatch(2, 1)
+    #reportMatch(1, 2, True)
     conn = connect()
     c = conn.cursor()
 
+    c.execute('''SELECT pid, numberOfByes
+                FROM TournamentMembers
+                WHERE tid = (%s)''', (tid,))
+    member_list = c.fetchall()
+    print "member list: "
+    print member_list
+    print
+
     c.execute('''SELECT player1, player2, result
-                FROM matches, tournament_members
-                WHERE matches.tournament = tournament_members.tid
-                AND tournament_members.tid = (%s)''', (tid,))
+                FROM Matches, TournamentMembers
+                WHERE Matches.tournament = TournamentMembers.tid
+                AND TournamentMembers.tid = (%s)''', (tid,))
     result_list = c.fetchall()
+    print "result_list: "
     print result_list
+    print
 
     conn.commit()
     conn.close()
 
 
-def reportMatch(winner, loser, tid=0):
+def reportMatch(winner, loser, isDraw=False, tid=0):
     """Records the outcome of a single match between two players.
 
     Args:
@@ -132,6 +155,18 @@ def reportMatch(winner, loser, tid=0):
       loser:  the id number of the player who lost
     """
 
+    conn = connect()
+    c = conn.cursor()
+
+    if isDraw:
+        result = "D"
+    else:
+        result = "W"
+    c.execute('''INSERT INTO Matches (player1, player2, result, tournament)
+                VALUES ((%s), (%s), (%s), (%s))''', (winner, loser, result, tid,))
+
+    conn.commit()
+    conn.close()
 
 def swissPairings(tid=0):
     """Returns a list of pairs of players for the next round of a match.
