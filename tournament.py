@@ -5,8 +5,8 @@
 
 import psycopg2
 
-POINTS_FOR_WIN = 1
-POINTS_FOR_DRAW = 0
+POINTS_FOR_WIN = 3
+POINTS_FOR_DRAW = 1
 POINTS_FOR_BYE = 1
 
 
@@ -159,8 +159,8 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
         p2points = POINTS_FOR_DRAW
     else:
         p1points = POINTS_FOR_WIN
-        p1points = 0
-    c.execute('''INSERT INTO Matches (player1, player2, player1_win, draw, tournament)
+        p2points = 0
+    c.execute('''INSERT INTO Matches (player1, player2, p1points, p2points, tournament)
                 VALUES ((%s), (%s), (%s), (%s), (%s))''', (winner, loser, p1points, p2points, tid,))
 
     conn.commit()
