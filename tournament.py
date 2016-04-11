@@ -169,7 +169,6 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
     c.execute('''INSERT INTO Matches (player1, player2, result, tournament)
                 VALUES ((%s), (%s), (%s), (%s))''', (winner, loser, result, tid,))
 
-
     conn.commit()
     conn.close()
 
@@ -188,8 +187,98 @@ def swissPairings(tid=0):
         id2: the second player's unique id
         name2: the second player's name
     """
+    def findPair(standing, pairs, index):
+        '''
+        finds best pair for person standing[index]
+        returns pair index
+        '''
+        numOfPlayers = len(standing)
+        if numOfPlayers < 2:
+            return -1
+        print "index = " + str(index)
+        print
+        print str(pairs)
+        for i in range(1,len(standing)):
+            print i
+            if index + i < numOfPlayers:
+                if (standing[index][0], standing[index+i][0]) not in pairs and (standing[index+i][0], standing[index][0]) not in pairs:
+                    print "return from findPair: " + str(index+i)
+                    print
+                    return index + i
+            if index - i >= 0:
+                if (standing[index][0], standing[index-i][0]) not in pairs and (standing[index-i][0], standing[index][0]) not in pairs:
+                    print "return from findPair: " + str(index-i)
+                    print
+                    return index - i
 
+        if index + 1 == numOfPlayers:
+            return index - 1
+        else:
+            return index + 1
 
+    def checkLowNumOfMatches(standing, max):
+        '''
+        checks, is there any team with number of matches lower then max
+        if any - returns first's index
+        '''
+        print "CheckLow (max): " + str(max)
+        print
+        for i in range(len(standing)):
+            if standing[i][3] < max:
+                return i
+        return -1
+
+    standing = playerStandings(tid)
+    print "Standings: " + str(standing)
+    print
+
+    conn = connect()
+    c = conn.cursor()
+
+    c.execute('''SELECT player1, player2
+                FROM Matches
+                WHERE tournament = (%s)''', (tid,))
+
+    pairs = c.fetchall()
+    print "Pairs: " + str(pairs)
+    print
+
+    final_pairs = []
+
+    #check, if any players with lower number of matches. If exists - find pair for him
+    maxMatches = 0
+    for i in standing:
+        if i[3] > maxMatches:
+            maxMatches - i[3]
+
+    while len(standing) > 1:
+        print "=======new cycle======"
+        print "standings: " + str(standing)
+        print
+        low = checkLowNumOfMatches(standing, maxMatches)
+        if low == -1:
+            pair = findPair(standing, pairs, 0)
+            print "pair: " + str(pair)
+            print
+            final_pairs.append((standing[0][0], standing[0][1], standing[pair][0], standing[pair][1]))
+            standing.pop(pair)
+            standing.pop(0)
+        else:
+            pair = findPair(standing, pairs, low)
+            print "pair low: " + str(pair)
+            print
+            final_pairs.append((standing[low][0], standing[low][1], standing[pair][0], standing[pair][1]))
+            standing.pop(max(low,pair))
+            standing.pop(min(low,pair))
+
+    conn.commit()
+    conn.close()
+
+    print "Final_pairs: " + str(final_pairs)
+    print
+
+    return final_pairs
+'''
 deletePlayers()
 deleteMatches()
 
@@ -204,3 +293,4 @@ reportMatch(1, 2)
 reportMatch(3, 1)
 reportMatch(2, 1)
 reportMatch(1, 2, True)
+'''
