@@ -146,11 +146,110 @@ def testPairings():
                 "After one match, players with one win should be paired.")
     print "10. After one match, players with one win are properly paired."
 
+def multiplyTournaments():
+    """
+    TODO: description
+    """
+    deleteMatches()
+    deletePlayers()
+
+
+    registerPlayer("Twilight Sparkle", 1)
+    registerPlayer("Fluttershy", 1)
+    registerPlayer("Applejack", 1)
+    registerPlayer("Pinkie Pie", 1)
+    registerPlayer("Rarity", 2)
+    registerPlayer("Rainbow Dash", 2)
+    registerPlayer("Princess Celestia", 2)
+    registerPlayer("Princess Luna", 2)
+
+    ps1 = playerStandings(1)
+    ps2 = playerStandings(2)
+
+    if len(ps1) != 4 or len(ps2) != 4:
+        raise ValueError("Players incorrectly divided by tournaments")
+    print "11. Players can be divided by tournaments."
+
+    pairs1 = swissPairings(1)
+    pairs2 = swissPairings(2)
+
+    if len(pairs1) != 2 or len(pairs2) != 2:
+        raise ValueError("Players incorrectly paired in case of non-default tournaments")
+    print "12. Players can be paired in non-default tournament"
+
+def oddPlayers():
+    deleteMatches()
+    deletePlayers()
+
+    registerPlayer("Twilight Sparkle")
+    registerPlayer("Fluttershy")
+    registerPlayer("Applejack")
+    registerPlayer("Pinkie Pie")
+    registerPlayer("Rarity")
+
+    ps = playerStandings()
+    if len(ps) != 5:
+        raise ValueError("Standing is wrong for odd number of players")
+    print "13. Odd number of players can be added to the tournament"
+
+    pairs = swissPairings()
+    if len(pairs) != 2 :
+        raise ValueError("Odd number of player incorrectly paired")
+    print "14. Odd number of players can be paired"
+
+    reportMatch(pairs[0][0], pairs[0][2])
+    reportMatch(pairs[1][0], pairs[1][2])
+
+    ps = playerStandings()
+    if len(ps) != 5:
+        raise ValueError("Standing is wrong for odd number of players after first round")
+
+    pairs = swissPairings()
+    reportMatch(pairs[0][0],pairs[0][2])
+    reportMatch(pairs[1][0],pairs[1][2])
+
+    ps = playerStandings()
+    if len(ps) != 5:
+        raise ValueError("Standing is wrong for odd number of players after second round")
+
+    for i in ps:
+        if i[3] > 2 or i[3] < 1:
+            raise ValueError("Pairing is wrong in case of odd number of players: one player do not participate")
+    print "15. Odd number of players can be paired correctly after 2 rounds"
+
+    psb = playerStandingsWithBye()
+    for i in psb:
+        if i[3] == 1 and i[2] < 1: #if we played only one match and didn't get points for bye
+            raise ValueError("Bye is added incorrectly")
+    print "16. Player gets points for 'Bye'"
+
+def drawResults():
+    '''
+    TODO: describtion
+    really useful only if POINTS_FOR_DRAW are set to nonzero value
+    '''
+    deleteMatches()
+    deletePlayers()
+
+    registerPlayer("Twilight Sparkle")
+    registerPlayer("Fluttershy")
+
+    pairs = swissPairings()
+
+    reportMatch(pairs[0][0],pairs[0][2], True)
+
+    ps = playerStandings()
+
+    if ps[0][2] != POINTS_FOR_DRAW or ps[1][2] != POINTS_FOR_DRAW:
+        raise ValueError("Players don't get correct points for draw")
+    print "17. Players get correct points for draw"
 
 if __name__ == '__main__':
     testCount()
     testStandingsBeforeMatches()
     testReportMatches()
     testPairings()
+    multiplyTournaments()
+    oddPlayers()
+    drawResults()
     print "Success!  All tests pass!"
-    #playerStandings()

@@ -53,7 +53,7 @@ def countPlayers():
     return count
 
 
-def registerPlayer(name):
+def registerPlayer(name, tid=0):
     """Adds a player to the tournament database.
 
     The database assigns a unique serial id number for the player.  (This
@@ -72,9 +72,7 @@ def registerPlayer(name):
         ''', (name,))
     pid = c.fetchone()[0]
 
-    registerPlayerForTournament(pid)  # player always registers to Default
-                                      # tournament with TID=0 to be
-                                      # compatible with default tests
+    registerPlayerForTournament(pid, tid)
 
     conn.commit()
     conn.close()
@@ -142,6 +140,23 @@ def playerStandings(tid=0):
 
     return result_list
 
+def playerStandingsWithBye(tid=0):
+    ps = playerStandings(tid)
+    result = []
+
+    maxMatches = 0
+    for i in ps:
+        if i[3] > maxMatches:
+            maxMatches = i[3]
+    for i in ps:
+        if i[3] == maxMatches:
+            result.append(i)
+        else:
+            addBye = (maxMatches - i[3]) * POINTS_FOR_BYE
+            result.append((i[0], i[1], i[2] + addBye, i[3]))
+    return result
+
+
 def reportMatch(winner, loser, isDraw=False, tid=0):
     """Records the outcome of a single match between two players.
 
@@ -195,20 +210,13 @@ def swissPairings(tid=0):
         numOfPlayers = len(standing)
         if numOfPlayers < 2:
             return -1
-        print "index = " + str(index)
-        print
-        print str(pairs)
+
         for i in range(1,len(standing)):
-            print i
             if index + i < numOfPlayers:
                 if (standing[index][0], standing[index+i][0]) not in pairs and (standing[index+i][0], standing[index][0]) not in pairs:
-                    print "return from findPair: " + str(index+i)
-                    print
                     return index + i
             if index - i >= 0:
                 if (standing[index][0], standing[index-i][0]) not in pairs and (standing[index-i][0], standing[index][0]) not in pairs:
-                    print "return from findPair: " + str(index-i)
-                    print
                     return index - i
 
         if index + 1 == numOfPlayers:
@@ -221,16 +229,12 @@ def swissPairings(tid=0):
         checks, is there any team with number of matches lower then max
         if any - returns first's index
         '''
-        print "CheckLow (max): " + str(max)
-        print
         for i in range(len(standing)):
             if standing[i][3] < max:
                 return i
         return -1
 
     standing = playerStandings(tid)
-    print "Standings: " + str(standing)
-    print
 
     conn = connect()
     c = conn.cursor()
@@ -240,8 +244,6 @@ def swissPairings(tid=0):
                 WHERE tournament = (%s)''', (tid,))
 
     pairs = c.fetchall()
-    print "Pairs: " + str(pairs)
-    print
 
     final_pairs = []
 
@@ -249,48 +251,18 @@ def swissPairings(tid=0):
     maxMatches = 0
     for i in standing:
         if i[3] > maxMatches:
-            maxMatches - i[3]
+            maxMatches = i[3]
 
     while len(standing) > 1:
-        print "=======new cycle======"
-        print "standings: " + str(standing)
-        print
         low = checkLowNumOfMatches(standing, maxMatches)
-        if low == -1:
-            pair = findPair(standing, pairs, 0)
-            print "pair: " + str(pair)
-            print
-            final_pairs.append((standing[0][0], standing[0][1], standing[pair][0], standing[pair][1]))
-            standing.pop(pair)
-            standing.pop(0)
-        else:
-            pair = findPair(standing, pairs, low)
-            print "pair low: " + str(pair)
-            print
-            final_pairs.append((standing[low][0], standing[low][1], standing[pair][0], standing[pair][1]))
-            standing.pop(max(low,pair))
-            standing.pop(min(low,pair))
+        if low == -1:  # if there is no player with number matches lower than others
+            low = 0  # start with the first one
+        pair = findPair(standing, pairs, low)
+        final_pairs.append((standing[low][0], standing[low][1], standing[pair][0], standing[pair][1]))
+        standing.pop(max(low, pair))
+        standing.pop(min(low, pair))
 
     conn.commit()
     conn.close()
 
-    print "Final_pairs: " + str(final_pairs)
-    print
-
     return final_pairs
-'''
-deletePlayers()
-deleteMatches()
-
-registerPlayer("Num One")
-registerPlayer("Num Two")
-registerPlayer("Num Three")
-#registerPlayer("Num Four")
-
-reportMatch(1, 2)
-reportMatch(1, 2)
-reportMatch(1, 2)
-reportMatch(3, 1)
-reportMatch(2, 1)
-reportMatch(1, 2, True)
-'''
