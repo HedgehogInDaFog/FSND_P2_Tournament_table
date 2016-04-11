@@ -5,8 +5,8 @@
 
 import psycopg2
 
-POINTS_FOR_WIN = 3
-POINTS_FOR_DRAW = 1
+POINTS_FOR_WIN = 1
+POINTS_FOR_DRAW = 0
 POINTS_FOR_BYE = 1
 
 
@@ -21,6 +21,7 @@ def deleteMatches():
     c = conn.cursor()
 
     c.execute("DELETE FROM Matches;")
+    c.execute("DELETE FROM Points;")
 
     conn.commit()
     conn.close()
@@ -80,13 +81,7 @@ def registerPlayer(name):
 
 
 def registerPlayerForTournament(pid, tid=0):
-    """Adds a player to the tournament database.
-
-    The database assigns a unique serial id number for the player.  (This
-    should be handled by your SQL database schema, not in your Python code.)
-
-    Args:
-      name: the player's full name (need not be unique).
+    """TODO: description
     """
     conn = connect()
     c = conn.cursor()
@@ -110,38 +105,42 @@ def playerStandings(tid=0):
         wins: the number of matches the player has won
         matches: the number of matches the player has played
     """
-    deletePlayers()
-    deleteMatches()
-
-    registerPlayer("Num One")
-    registerPlayer("Num Two")
-
-    reportMatch(1, 2)
-    reportMatch(3, 1)
-    reportMatch(1, 2, True)
 
     conn = connect()
     c = conn.cursor()
 
-    c.execute('''SELECT pid
-                FROM TournamentMembers
-                WHERE tid = (%s)''', (tid,))
-    member_list = c.fetchall()
-    print "member list: "
-    print member_list
-    print
+    c.execute('''SELECT pointsSummary.player, players.name, pointsSummary.points, pointsSummary.matches FROM
+                Players, (
+                SELECT player, sum(points) AS points, count(player) AS matches
+                FROM Points
+                WHERE Points.tournament = (%s)
+                GROUP BY player
+                ) AS pointsSummary
+                WHERE pointsSummary.player = Players.pid
+                ORDER BY pointsSummary.points DESC
+                ''', (tid,))
+    result_list = c.fetchall() #full standing without players with zero games
 
-    c.execute('''SELECT player1, player2, p1points, p2points
-                FROM Matches
-                WHERE Matches.tournament = (%s)''', (tid,))
-    result_list = c.fetchall()
-    print "result_list: "
-    print result_list
-    print
+    c.execute('''SELECT TournamentMembers.pid, Players.name
+                FROM TournamentMembers, Players
+                WHERE TournamentMembers.tid = (%s)
+                AND TournamentMembers.pid = Players.pid
+        ''', (tid,))
+
+    members_list = c.fetchall() #full list of players in the tournament
+
+    if len(members_list) != len(result_list):
+        pid_list = []
+        for i in result_list:
+            pid_list.append(i[0]) # list of pids in standing  without players with zero games
+        for i in members_list:
+            if i[0] not in pid_list:
+                result_list.append((i[0], i[1], 0, 0)) #add players with zero games
 
     conn.commit()
     conn.close()
 
+    return result_list
 
 def reportMatch(winner, loser, isDraw=False, tid=0):
     """Records the outcome of a single match between two players.
@@ -155,13 +154,21 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
     c = conn.cursor()
 
     if isDraw:
-        p1points = POINTS_FOR_DRAW
-        p2points = POINTS_FOR_DRAW
+        result = "D"
+        c.execute('''INSERT INTO Points (player, points, tournament)
+                VALUES ((%s), (%s), (%s))''', (winner, POINTS_FOR_DRAW, tid,))
+        c.execute('''INSERT INTO Points (player, points, tournament)
+                VALUES ((%s), (%s), (%s))''', (loser, POINTS_FOR_DRAW, tid,))
     else:
-        p1points = POINTS_FOR_WIN
-        p2points = 0
-    c.execute('''INSERT INTO Matches (player1, player2, p1points, p2points, tournament)
-                VALUES ((%s), (%s), (%s), (%s), (%s))''', (winner, loser, p1points, p2points, tid,))
+        result = "W"
+        c.execute('''INSERT INTO Points (player, points, tournament)
+                VALUES ((%s), (%s), (%s))''', (winner, POINTS_FOR_WIN, tid,))
+        c.execute('''INSERT INTO Points (player, points, tournament)
+                VALUES ((%s), (%s), (%s))''', (loser, 0, tid,))
+
+    c.execute('''INSERT INTO Matches (player1, player2, result, tournament)
+                VALUES ((%s), (%s), (%s), (%s))''', (winner, loser, result, tid,))
+
 
     conn.commit()
     conn.close()
@@ -182,17 +189,18 @@ def swissPairings(tid=0):
         name2: the second player's name
     """
 
-'''
+
 deletePlayers()
 deleteMatches()
 
 registerPlayer("Num One")
 registerPlayer("Num Two")
-#registerPlayer("Num Three")
+registerPlayer("Num Three")
 #registerPlayer("Num Four")
 
 reportMatch(1, 2)
+reportMatch(1, 2)
+reportMatch(1, 2)
 reportMatch(3, 1)
-#reportMatch(2, 1)
-#reportMatch(1, 2, True)
-'''
+reportMatch(2, 1)
+reportMatch(1, 2, True)
