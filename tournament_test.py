@@ -219,13 +219,13 @@ def oddPlayers():
 
     psb = playerStandingsWithBye()
     for i in psb:
-        if i[3] == 1 and i[2] < 1: #if we played only one match and didn't get points for bye
+        if i[3] == 1 and i[2] < 1:  # if we played only one match and didn't get points for bye
             raise ValueError("Bye is added incorrectly")
     print "16. Player gets points for 'Bye'"
 
 def drawResults():
     '''
-    TODO: describtion
+    TODO: description
     really useful only if POINTS_FOR_DRAW are set to nonzero value
     '''
     deleteMatches()

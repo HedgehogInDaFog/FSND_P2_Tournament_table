@@ -8,7 +8,9 @@
 
 DROP DATABASE tournament;
 CREATE DATABASE tournament;
+
 \c tournament;
+
 DROP TABLE IF EXISTS Players;
 DROP TABLE IF EXISTS Matches;
 DROP TABLE IF EXISTS TournamentMembers;
