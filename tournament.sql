@@ -16,11 +16,26 @@ DROP TABLE IF EXISTS Matches;
 DROP TABLE IF EXISTS TournamentMembers;
 
 CREATE TABLE Players (
+--     Column |  Type   |                       Modifiers
+--    --------+---------+-------------------------------------------------------
+--     pid    | integer | not null default nextval('players_pid_seq'::regclass)
+--     name   | text    |
+--    Indexes:
+--       "players_pkey" PRIMARY KEY, btree (pid)
 	pid		serial PRIMARY KEY,
 	name	text
 );
 
 CREATE TABLE Matches (
+--     	  Column   |         Type         |                       Modifiers
+--     ------------+----------------------+-------------------------------------------------------
+--      mid        | integer              | not null default nextval('matches_mid_seq'::regclass)
+--      player1    | integer              |
+--      player2    | integer              |
+--      result     | character varying(1) |
+--      tournament | integer              |
+--     Indexes:
+--         "matches_pkey" PRIMARY KEY, btree (mid)
 	mid			serial PRIMARY KEY,
 	player1		integer,
 	player2		integer,
@@ -29,12 +44,21 @@ CREATE TABLE Matches (
 );
 
 CREATE TABLE Points (
+--        Column   |  Type   | Modifiers
+--     ------------+---------+-----------
+--      player     | integer |
+--      points     | integer |
+--      tournament | integer |
 	player		integer,
 	points		integer,
 	tournament	integer
 );
 
 CREATE TABLE TournamentMembers (
+--      Column |  Type   | Modifiers
+--     --------+---------+-----------
+--      tid    | integer |
+--      pid    | integer |
 	tid				integer,
 	pid				integer
 );
