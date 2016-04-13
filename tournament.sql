@@ -38,9 +38,9 @@ CREATE TABLE Matches (
 --     Indexes:
 --         "matches_pkey" PRIMARY KEY, btree (mid)
 	mid			serial PRIMARY KEY,
-	player1		integer,
+	player1		integer, -- id of the player
 	p1points	integer,
-	player2		integer,
+	player2		integer, -- id of the player
 	p2points	integer,
 	tournament	integer
 );
@@ -50,15 +50,6 @@ CREATE TABLE TournamentMembers (
 --     --------+---------+-----------
 --      tid    | integer |
 --      pid    | integer |
-	tid				integer,
-	pid				integer
-);
-
-CREATE TABLE Rules (
---      Column |  Type   | Modifiers
---     --------+---------+-----------
---      tid    | integer |
---      pid    | integer |
-	option				text,
-	option_value		integer
+	tid		integer,
+	pid		integer 
 );
