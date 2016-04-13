@@ -9,7 +9,6 @@ POINTS_FOR_WIN = 1   # Such default configuration is done to be compatible with 
 POINTS_FOR_DRAW = 0  # It is more interesting to have 3 points for win and 1 point for draw
 POINTS_FOR_BYE = 1
 
-
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
     return psycopg2.connect("dbname=tournament")
@@ -21,7 +20,6 @@ def deleteMatches():
     c = conn.cursor()
 
     c.execute("DELETE FROM Matches;")
-    c.execute("DELETE FROM Points;")
 
     conn.commit()
     conn.close()
@@ -113,16 +111,29 @@ def playerStandings(tid=0):
     conn = connect()
     c = conn.cursor()
 
-    c.execute('''SELECT pointsSummary.player, players.name, pointsSummary.points, pointsSummary.matches FROM
-                Players, (
-                SELECT player, sum(points) AS points, count(player) AS matches
-                FROM Points
-                WHERE Points.tournament = (%s)
-                GROUP BY player
-                ) AS pointsSummary
-                WHERE pointsSummary.player = Players.pid
-                ORDER BY pointsSummary.points DESC
-                ''', (tid,))
+    c.execute('''SELECT ps.player_id, Players.name, ps.points, ps.matches
+                FROM Players,
+                    (
+                        SELECT player_id, sum(points) as points, sum(matches) as matches
+                        FROM
+                            (
+                                SELECT player1 AS player_id, sum(p1points) AS points, count(player1) AS matches
+                                FROM Matches
+                                WHERE Matches.tournament = (%s)
+                                GROUP BY player_id
+
+                                UNION
+
+                                SELECT player2 AS player_id, sum(p2points) AS points, count(player2) AS matches
+                                FROM Matches
+                                WHERE Matches.tournament = (%s)
+                                GROUP BY player_id
+                            ) AS tmp
+                        GROUP BY player_id
+                    ) AS ps
+                WHERE ps.player_id = Players.pid
+                ORDER BY ps.points DESC;
+            ''', (tid, tid, ))
     result_list = c.fetchall()  # full standing, but without players with zero games
 
     c.execute('''SELECT TournamentMembers.pid, Players.name
@@ -200,20 +211,14 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
     c = conn.cursor()
 
     if isDraw:
-        result = "D"
-        c.execute('''INSERT INTO Points (player, points, tournament)
-                VALUES ((%s), (%s), (%s))''', (winner, POINTS_FOR_DRAW, tid,))
-        c.execute('''INSERT INTO Points (player, points, tournament)
-                VALUES ((%s), (%s), (%s))''', (loser, POINTS_FOR_DRAW, tid,))
+        p1points = POINTS_FOR_DRAW
+        p2points = POINTS_FOR_DRAW
     else:
-        result = "W"
-        c.execute('''INSERT INTO Points (player, points, tournament)
-                VALUES ((%s), (%s), (%s))''', (winner, POINTS_FOR_WIN, tid,))
-        c.execute('''INSERT INTO Points (player, points, tournament)
-                VALUES ((%s), (%s), (%s))''', (loser, 0, tid,))
+        p1points = POINTS_FOR_WIN
+        p2points = 0
 
-    c.execute('''INSERT INTO Matches (player1, player2, result, tournament)
-                VALUES ((%s), (%s), (%s), (%s))''', (winner, loser, result, tid,))
+    c.execute('''INSERT INTO Matches (player1, p1points, player2, p2points, tournament)
+                VALUES ((%s), (%s), (%s), (%s), (%s))''', (winner, p1points, loser, p2points, tid,))
 
     conn.commit()
     conn.close()

@@ -14,6 +14,7 @@ CREATE DATABASE tournament;
 DROP TABLE IF EXISTS Players;
 DROP TABLE IF EXISTS Matches;
 DROP TABLE IF EXISTS TournamentMembers;
+DROP TABLE IF EXISTS Rules;
 
 CREATE TABLE Players (
 --     Column |  Type   |                       Modifiers
@@ -38,19 +39,9 @@ CREATE TABLE Matches (
 --         "matches_pkey" PRIMARY KEY, btree (mid)
 	mid			serial PRIMARY KEY,
 	player1		integer,
+	p1points	integer,
 	player2		integer,
-	result		varchar(1), -- "W" for win, "D" for draw
-	tournament	integer
-);
-
-CREATE TABLE Points (
---        Column   |  Type   | Modifiers
---     ------------+---------+-----------
---      player     | integer |
---      points     | integer |
---      tournament | integer |
-	player		integer,
-	points		integer,
+	p2points	integer,
 	tournament	integer
 );
 
@@ -61,4 +52,13 @@ CREATE TABLE TournamentMembers (
 --      pid    | integer |
 	tid				integer,
 	pid				integer
+);
+
+CREATE TABLE Rules (
+--      Column |  Type   | Modifiers
+--     --------+---------+-----------
+--      tid    | integer |
+--      pid    | integer |
+	option				text,
+	option_value		integer
 );
