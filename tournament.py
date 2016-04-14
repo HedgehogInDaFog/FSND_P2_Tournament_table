@@ -5,9 +5,10 @@
 
 import psycopg2
 
-POINTS_FOR_WIN = 1   # Such default configuration is done to be compatible with default tests
-POINTS_FOR_DRAW = 0  # It is more interesting to have 3 points for win and 1 point for draw
-POINTS_FOR_BYE = 1
+POINTS_FOR_WIN = 1   # Such default configuration is done to be compatible
+POINTS_FOR_DRAW = 0  # with default tests. It is more interesting to have 3
+POINTS_FOR_BYE = 1   # points for win and 1 point for draw
+
 
 def connect():
     """Connect to the PostgreSQL database.  Returns a database connection."""
@@ -70,10 +71,10 @@ def registerPlayer(name, tid=0):
         ''', (name,))
     pid = c.fetchone()[0]
 
-    registerPlayerForTournament(pid, tid)  # To support multiply tournaments.
-                                           # One player can participate in any number of tournaments
-                                           # All players are rigestered for TID=0 by default
-                                           # to be compartible with default tests
+    # registerPlayerForTournament is to support multiply tournaments. One
+    # player can participate in any number of tournaments. All players are
+    # registered for TID=0 by default to be compartible with default tests
+    registerPlayerForTournament(pid, tid)
 
     conn.commit()
     conn.close()
@@ -85,17 +86,18 @@ def registerPlayerForTournament(pid, tid=0):
     conn = connect()
     c = conn.cursor()
 
-    c.execute("INSERT INTO TournamentMembers (tid, pid) VALUES (%s , %s)", (tid, pid, ))
+    c.execute("""INSERT INTO TournamentMembers (tid, pid)
+                VALUES (%s , %s)""", (tid, pid, ))
 
     conn.commit()
     conn.close()
 
 
 def playerStandings(tid=0):
-    """Returns a list of the players and their point records, sorted by points.
+    """Returns a list of the players and their point records, sorted by points
 
-    The first entry in the list should be the player in first place, or a player
-    tied for first place if there is currently a tie.
+    The first entry in the list should be the player in first place, or a
+    player tied for first place if there is currently a tie.
 
     Args:
       tid: tournament ID (0 is default tournament)
@@ -134,7 +136,7 @@ def playerStandings(tid=0):
                 WHERE ps.player_id = Players.pid
                 ORDER BY ps.points DESC;
             ''', (tid, tid, ))
-    result_list = c.fetchall()  # full standing, but without players with zero games
+    result_list = c.fetchall()  # standing without players with 0 games
 
     c.execute('''SELECT TournamentMembers.pid, Players.name
                 FROM TournamentMembers, Players
@@ -142,31 +144,34 @@ def playerStandings(tid=0):
                 AND TournamentMembers.pid = Players.pid
         ''', (tid,))
 
-    members_list = c.fetchall()  # full list of players, registered in the tournament
-
+    members_list = c.fetchall()  # full list of players,
+                                 # registered in the tournament
     conn.commit()
     conn.close()
 
     # Now we need to merge result_list and members_list to get full standings,
     # including those players who has zero games
 
-    if len(members_list) != len(result_list):  # if some members are not in current standing (so if we have any members with zero games)
+    # if some members are not in current standing
+    # (so if we have any members with zero games)
+    if len(members_list) != len(result_list):  
         pid_list = []
         for i in result_list:
             pid_list.append(i[0])
         for i in members_list:
             if i[0] not in pid_list:
-                result_list.append((i[0], i[1], 0, 0))  # add players with zero games
+                result_list.append((i[0], i[1], 0, 0))  # add players 
+                                                        # with 0 games
 
     return result_list
 
 
 def playerStandingsWithBye(tid=0):
-    """Returns a list of the players and their point records, sorted by points,
-        including points for "Bye" (skipped rounds)
+    """Returns a list of the players and their point records, sorted by
+        points, including points for "Bye" (skipped rounds)
 
-    The first entry in the list should be the player in first place, or a player
-    tied for first place if there is currently a tie.
+    The first entry in the list should be the player in first place,
+    or a player tied for first place if there is currently a tie.
 
     Args:
       tid: tournament ID (0 is default tournament)
@@ -192,8 +197,10 @@ def playerStandingsWithBye(tid=0):
         if i[3] == maxMatches:  # if player played in all rounds
             result.append(i)    # do not modify original standings
         else:
-            addBye = (maxMatches - i[3]) * POINTS_FOR_BYE     # add points for every skipped round
-            result.append((i[0], i[1], i[2] + addBye, i[3]))  # add modified player information to standings
+            # add points for every skipped round:
+            addBye = (maxMatches - i[3]) * POINTS_FOR_BYE
+            # add modified player information to standings:
+            result.append((i[0], i[1], i[2] + addBye, i[3]))
     return result
 
 
@@ -203,7 +210,8 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
     Args:
       winner:  the id number of the player who won/tied
       loser:  the id number of the player who lost/tied
-      isDraw: True in case of draw (tie) (False by default to be compatible with default tests)
+      isDraw: True in case of draw (tie) (False by default to be
+        compatible with default tests)
       tid: tournament ID (0 is default tournament)
     """
 
