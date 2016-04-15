@@ -31,8 +31,8 @@ def deletePlayers():
     conn = connect()
     c = conn.cursor()
 
-    c.execute("DELETE FROM Players;")
     c.execute("DELETE FROM TournamentMembers;")
+    c.execute("DELETE FROM Players;")
 
     conn.commit()
     conn.close()
@@ -65,6 +65,8 @@ def registerPlayer(name, tid=0):
     c = conn.cursor()
 
     c.execute("INSERT INTO Players (name) VALUES (%s)", (name,))
+    conn.commit()
+   
     c.execute('''SELECT max(pid)
                 FROM Players
                 WHERE name = (%s)
@@ -277,16 +279,16 @@ def swissPairings(tid=0):
 
         for i in range(1, len(standing)):
             curr = standing[index][0]
-            prev = standing[index-i][0]
-            next = standing[index+i][0]
             # check that we are still in the boundaries of our standing:
             if index + i < numOfPlayers:
+                next = standing[index+i][0]
                 # check that this players didn't play against
                 # each other previously:
                 if (curr, next) not in pairs and (next, curr) not in pairs:
                     return index + i
             # check that we are still in the boundaries of our standing:
             if index - i >= 0:
+                prev = standing[index-i][0]
                 # check that this players didn't play against
                 # each other previously:
                 if (curr, prev) not in pairs and (prev, curr) not in pairs:
