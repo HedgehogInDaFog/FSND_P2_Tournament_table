@@ -15,8 +15,11 @@ You need to have a server or VM with the following environment:
 
 To create a DB:
  - open postgreSQL:
+
  ```psql```
+
  - use tournament.sql file:
+ 
  ```\i tournament.sql```
 
 To use python functions - import file tournament.py to your project and use it according to documentation
