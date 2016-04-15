@@ -116,17 +116,23 @@ def playerStandings(tid=0):
     c.execute('''SELECT ps.player_id, Players.name, ps.points, ps.matches
                 FROM Players,
                     (
-                        SELECT player_id, sum(points) as points, sum(matches) as matches
+                        SELECT player_id,
+                                sum(points) as points,
+                                sum(matches) as matches
                         FROM
                             (
-                                SELECT player1 AS player_id, sum(p1points) AS points, count(player1) AS matches
+                                SELECT player1 AS player_id,
+                                        sum(p1points) AS points,
+                                        count(player1) AS matches
                                 FROM Matches
                                 WHERE Matches.tournament = (%s)
                                 GROUP BY player_id
 
                                 UNION
 
-                                SELECT player2 AS player_id, sum(p2points) AS points, count(player2) AS matches
+                                SELECT player2 AS player_id,
+                                        sum(p2points) AS points,
+                                        count(player2) AS matches
                                 FROM Matches
                                 WHERE Matches.tournament = (%s)
                                 GROUP BY player_id
@@ -154,13 +160,13 @@ def playerStandings(tid=0):
 
     # if some members are not in current standing
     # (so if we have any members with zero games)
-    if len(members_list) != len(result_list):  
+    if len(members_list) != len(result_list):
         pid_list = []
         for i in result_list:
             pid_list.append(i[0])
         for i in members_list:
             if i[0] not in pid_list:
-                result_list.append((i[0], i[1], 0, 0))  # add players 
+                result_list.append((i[0], i[1], 0, 0))  # add players
                                                         # with 0 games
 
     return result_list
@@ -225,11 +231,14 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
         p1points = POINTS_FOR_WIN
         p2points = 0
 
-    c.execute('''INSERT INTO Matches (player1, p1points, player2, p2points, tournament)
-                VALUES ((%s), (%s), (%s), (%s), (%s))''', (winner, p1points, loser, p2points, tid,))
+    c.execute('''INSERT INTO Matches (player1, p1points, player2,
+                                        p2points, tournament)
+             VALUES ((%s), (%s), (%s), (%s), (%s))''',
+             (winner, p1points, loser, p2points, tid,))
 
     conn.commit()
     conn.close()
+
 
 def swissPairings(tid=0):
     """Returns a list of pairs of players for the next round of a match.
@@ -255,7 +264,8 @@ def swissPairings(tid=0):
 
         Args:
           standing: tournament table, containing unpaired playerStandings
-          pairs: list of tuples with id's of players who previously played against each other
+          pairs: list of tuples with id's of players who previously played
+                against each other
           index: position of player in standing for whom the pair is searching
 
         Returns:
@@ -266,14 +276,24 @@ def swissPairings(tid=0):
             return -1
 
         for i in range(1, len(standing)):
-            if index + i < numOfPlayers:  # check that we are still in the boundaries of our standing
-                if (standing[index][0], standing[index+i][0]) not in pairs and (standing[index+i][0], standing[index][0]) not in pairs:  # check that this players didn't play against each other previously
+            curr = standing[index][0]
+            prev = standing[index-i][0]
+            next = standing[index+i][0]
+            # check that we are still in the boundaries of our standing:
+            if index + i < numOfPlayers:
+                # check that this players didn't play against
+                # each other previously:
+                if (curr, next) not in pairs and (next, curr) not in pairs:
                     return index + i
-            if index - i >= 0:  # check that we are still in the boundaries of our standing
-                if (standing[index][0], standing[index-i][0]) not in pairs and (standing[index-i][0], standing[index][0]) not in pairs:  # check that this players didn't play against each other previously
+            # check that we are still in the boundaries of our standing:
+            if index - i >= 0:
+                # check that this players didn't play against
+                # each other previously:
+                if (curr, prev) not in pairs and (prev, curr) not in pairs:
                     return index - i
 
-        # in case player previously played with all possible partners, we choose simply adjacent
+        # in case player previously played with all possible partners,
+        # we choose simply adjacent
         if index + 1 == numOfPlayers:
             return index - 1
         else:
@@ -312,7 +332,8 @@ def swissPairings(tid=0):
 
     final_pairs = []
 
-    #check, if any players with lower number of matches. If exists - find pair for him first
+    # Check, if any players with lower number of matches.
+    # If exists - find pair for him first
     maxMatches = 0
     for i in standing:
         if i[3] > maxMatches:
@@ -320,12 +341,13 @@ def swissPairings(tid=0):
 
     while len(standing) > 1:
         low = checkLowNumOfMatches(standing, maxMatches)
-        if low == -1:  # if there is no player with number matches lower than others
-            low = 0    # start with the first player
+        if low == -1:  # if there is no player with number matches lower
+            low = 0    # than other, than sstart with the first player
         pair = findPair(standing, pairs, low)
-        final_pairs.append((standing[low][0], standing[low][1], standing[pair][0], standing[pair][1]))
-        standing.pop(max(low, pair))  # remove paired players from temporary standing to avoid double-pairing
-        standing.pop(min(low, pair))  # remove paired players from temporary standing to avoid double-pairing
+        final_pairs.append((standing[low][0], standing[low][1],
+                            standing[pair][0], standing[pair][1]))
+        standing.pop(max(low, pair))  # remove paired players from temporary
+        standing.pop(min(low, pair))  # standing to avoid double-pairing
 
     conn.commit()
     conn.close()

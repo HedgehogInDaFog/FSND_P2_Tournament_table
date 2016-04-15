@@ -8,6 +8,7 @@
 
 from tournament import *
 
+
 def testCount():
     """
     Test for initial player count,
@@ -22,7 +23,7 @@ def testCount():
             "countPlayers should return numeric zero, not string '0'.")
     if c != 0:
         raise ValueError("After deletion, countPlayers should return zero.")
-    print "1. countPlayers() returns 0 after initial deletePlayers() execution."
+    print "1. countPlayers() returns 0 after initial deletePlayers() execution"
     registerPlayer("Chandra Nalaar")
     c = countPlayers()
     if c != 1:
@@ -42,6 +43,7 @@ def testCount():
             "After deletion, countPlayers should return zero.")
     print "4. countPlayers() returns zero after registered players are deleted.\n5. Player records successfully deleted."
 
+
 def testStandingsBeforeMatches():
     """
     Test to ensure players are properly represented in standings prior
@@ -53,8 +55,8 @@ def testStandingsBeforeMatches():
     registerPlayer("Randy Schwartz")
     standings = playerStandings()
     if len(standings) < 2:
-        raise ValueError("Players should appear in playerStandings even before "
-                         "they have played any matches.")
+        raise ValueError("Players should appear in playerStandings even "
+                         "before they have played any matches.")
     elif len(standings) > 2:
         raise ValueError("Only registered players should appear in standings.")
     if len(standings[0]) != 4:
@@ -64,9 +66,10 @@ def testStandingsBeforeMatches():
         raise ValueError(
             "Newly registered players should have no matches or wins.")
     if set([name1, name2]) != set(["Melpomene Murray", "Randy Schwartz"]):
-        raise ValueError("Registered players' names should appear in standings, "
-                         "even if they have no matches played.")
-    print "6. Newly registered players appear in the standings with no matches."
+        raise ValueError("Registered players' names should appear in "
+                         "standings, even if they have no matches played.")
+    print "6. Newly registered players appear in the standings with no matches"
+
 
 def testReportMatches():
     """
@@ -90,7 +93,7 @@ def testReportMatches():
         if i in (id1, id3) and w != 1:
             raise ValueError("Each match winner should have one win recorded.")
         elif i in (id2, id4) and w != 0:
-            raise ValueError("Each match loser should have zero wins recorded.")
+            raise ValueError("Each match loser should have zero wins recorded")
     print "7. After a match, players have updated standings."
     deleteMatches()
     standings = playerStandings()
@@ -102,6 +105,7 @@ def testReportMatches():
         if w != 0:
             raise ValueError("After deleting matches, players should have zero wins recorded.")
     print "8. After match deletion, player standings are properly reset.\n9. Matches are properly deleted."
+
 
 def testPairings():
     """
@@ -146,14 +150,15 @@ def testPairings():
                 "After one match, players with one win should be paired.")
     print "10. After one match, players with one win are properly paired."
 
+
 def multiplyTournaments():
     """
-    TODO: description
+    Test that multiply tournaments can be used
     """
     deleteMatches()
     deletePlayers()
 
-
+    # Register players to two non-default tournaments (tid=1, tid=2)
     registerPlayer("Twilight Sparkle", 1)
     registerPlayer("Fluttershy", 1)
     registerPlayer("Applejack", 1)
@@ -163,6 +168,7 @@ def multiplyTournaments():
     registerPlayer("Princess Celestia", 2)
     registerPlayer("Princess Luna", 2)
 
+    # Get standings for different tournaments
     ps1 = playerStandings(1)
     ps2 = playerStandings(2)
 
@@ -170,14 +176,19 @@ def multiplyTournaments():
         raise ValueError("Players incorrectly divided by tournaments")
     print "11. Players can be divided by tournaments."
 
+    # Make pairs for different tournaments
     pairs1 = swissPairings(1)
     pairs2 = swissPairings(2)
 
     if len(pairs1) != 2 or len(pairs2) != 2:
-        raise ValueError("Players incorrectly paired in case of non-default tournaments")
+        raise ValueError("Players incorrectly paired in multiply tournaments")
     print "12. Players can be paired in non-default tournament"
 
+
 def oddPlayers():
+    """
+    Test that odd number of players is supported
+    """
     deleteMatches()
     deletePlayers()
 
@@ -193,7 +204,7 @@ def oddPlayers():
     print "13. Odd number of players can be added to the tournament"
 
     pairs = swissPairings()
-    if len(pairs) != 2 :
+    if len(pairs) != 2:
         raise ValueError("Odd number of player incorrectly paired")
     print "14. Odd number of players can be paired"
 
@@ -202,31 +213,35 @@ def oddPlayers():
 
     ps = playerStandings()
     if len(ps) != 5:
-        raise ValueError("Standing is wrong for odd number of players after first round")
+        raise ValueError("Standing is wrong for odd number " +
+                         "of players after first round")
 
     pairs = swissPairings()
-    reportMatch(pairs[0][0],pairs[0][2])
-    reportMatch(pairs[1][0],pairs[1][2])
+    reportMatch(pairs[0][0], pairs[0][2])
+    reportMatch(pairs[1][0], pairs[1][2])
 
     ps = playerStandings()
     if len(ps) != 5:
-        raise ValueError("Standing is wrong for odd number of players after second round")
+        raise ValueError("Standing is wrong for odd number of " +
+                         "players after second round")
 
     for i in ps:
         if i[3] > 2 or i[3] < 1:
-            raise ValueError("Pairing is wrong in case of odd number of players: one player do not participate")
+            raise ValueError("Pairing is wrong in case of odd number of " +
+                             "players: one player do not participate")
     print "15. Odd number of players can be paired correctly after 2 rounds"
 
     psb = playerStandingsWithBye()
     for i in psb:
-        if i[3] == 1 and i[2] < 1:  # if we played only one match and didn't get points for bye
+        if i[3] == 1 and i[2] < 1:  # if we didn't get points for Bye
             raise ValueError("Bye is added incorrectly")
     print "16. Player gets points for 'Bye'"
 
+
 def drawResults():
     '''
-    TODO: description
-    really useful only if POINTS_FOR_DRAW are set to nonzero value
+    Test that match can have a draw (a tie) as a result
+    Really useful only if POINTS_FOR_DRAW are set to nonzero value
     '''
     deleteMatches()
     deletePlayers()
@@ -236,13 +251,14 @@ def drawResults():
 
     pairs = swissPairings()
 
-    reportMatch(pairs[0][0],pairs[0][2], True)
+    reportMatch(pairs[0][0], pairs[0][2], True)
 
     ps = playerStandings()
 
     if ps[0][2] != POINTS_FOR_DRAW or ps[1][2] != POINTS_FOR_DRAW:
         raise ValueError("Players don't get correct points for draw")
     print "17. Players get correct points for draw"
+
 
 if __name__ == '__main__':
     testCount()
