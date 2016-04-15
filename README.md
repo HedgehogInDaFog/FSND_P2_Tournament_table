@@ -6,11 +6,20 @@ Project 2 for Udacity Nanodegree
 This is a database to store the matches between players and a Python module to rank the players and pair them up in matches in a tournaments
 Pairing is made for a Swiss tournament
 
-## Environment
+## How to Use and Environment
 
-To successfully use DB and Python module you need to use:
+[Download this project](https://github.com/TrueZarathustra/FSND_P2_Tournament_table)
+You need to have a server or VM with the following environment:
   - Python 2.7
   - PostgreSQL 9.3
+
+To create a DB:
+ - open postgreSQL:
+ ```psql```
+ - use tournament.sql file:
+ ```\i tournament.sql```
+
+To use python functions - import file tournament.py to your project and use it according to documentation
 
 ## Files and their brief description
 1. tournament.sql - contains DB schema
@@ -66,7 +75,7 @@ Indexes:
 
 Detailed description you can find on the commentaries in the code, but the most important functions are:
 
-1. Function to register new players
+1) Function to register new players
 ```
 def registerPlayer(name, tid=0):
     """Adds a player to the tournament database.
@@ -79,7 +88,7 @@ def registerPlayer(name, tid=0):
     """
 ```
 
-2. Function to see current player standing (ranking)
+2) Function to see current player standing (ranking)
 ```
 def playerStandings(tid=0):
     """Returns a list of the players and their point records, sorted by points
@@ -99,7 +108,7 @@ def playerStandings(tid=0):
     """
 ```
 
-3. Function to pair players for the next round
+3) Function to pair players for the next round
 ```
 def swissPairings(tid=0):
     """Returns a list of pairs of players for the next round of a match.
@@ -121,7 +130,7 @@ def swissPairings(tid=0):
     """
 ```
 
-4. Function to report results of the match
+4) Function to report results of the match
 ```
 def reportMatch(winner, loser, isDraw=False, tid=0):
     """Records the outcome of a single match between two players.
@@ -134,11 +143,33 @@ def reportMatch(winner, loser, isDraw=False, tid=0):
       tid: tournament ID (0 is default tournament)
     """
 ```
+## Testing functions
+
+Tests cover most Python functions. In case of success you'll see:
+```
+1. countPlayers() returns 0 after initial deletePlayers() execution
+2. countPlayers() returns 1 after one player is registered.
+3. countPlayers() returns 2 after two players are registered.
+4. countPlayers() returns zero after registered players are deleted.
+5. Player records successfully deleted.
+6. Newly registered players appear in the standings with no matches
+7. After a match, players have updated standings.
+8. After match deletion, player standings are properly reset.
+9. Matches are properly deleted.
+10. After one match, players with one win are properly paired.
+11. Players can be divided by tournaments.
+12. Players can be paired in non-default tournament
+13. Odd number of players can be added to the tournament
+14. Odd number of players can be paired
+15. Odd number of players can be paired correctly after 2 rounds
+16. Player gets points for 'Bye'
+17. Players get correct points for draw
+Success!  All tests pass!
+```
 
 ## Contact information
 
 Author: Vladmir Vorotnikov
-
 E-mail: v.s.vorotnikov@gmail.com
 
 Feel free to contact me.
